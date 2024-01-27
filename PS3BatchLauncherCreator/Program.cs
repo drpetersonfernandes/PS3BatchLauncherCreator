@@ -11,39 +11,33 @@ partial class Program
     [STAThread]
     static void Main()
     {
-        bool continueScanning = true;
+        Console.WriteLine("Select a folder to scan:");
+        string? selectedFolder = SelectFolder();
 
-        while (continueScanning)
+        if (string.IsNullOrEmpty(selectedFolder))
         {
-            Console.WriteLine("Select a folder to scan:");
-            string? selectedFolder = SelectFolder();
-
-            if (string.IsNullOrEmpty(selectedFolder))
-            {
-                Console.WriteLine("No folder selected. Exiting application.");
-                MessageBox.Show("No folder selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            Console.WriteLine("Select the RPCS3 binary:");
-            string? rpcs3BinaryPath = SelectFile();
-
-            if (string.IsNullOrEmpty(rpcs3BinaryPath))
-            {
-                Console.WriteLine("No file selected. Exiting application.");
-                MessageBox.Show("No file selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            CreateBatchFilesForFolders(selectedFolder, rpcs3BinaryPath);
-
-            // Ask user if they want to scan another folder
-            Console.WriteLine("Do you want to scan another folder? (Y/N)");
-            var response = Console.ReadLine();
-            continueScanning = response != null && response.Trim().Equals("Y", StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine("No folder selected. Exiting application.");
+            MessageBox.Show("No folder selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
         }
-    }
 
+        Console.WriteLine("Select the RPCS3 binary:");
+        string? rpcs3BinaryPath = SelectFile();
+
+        if (string.IsNullOrEmpty(rpcs3BinaryPath))
+        {
+            Console.WriteLine("No file selected. Exiting application.");
+            MessageBox.Show("No file selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        CreateBatchFilesForFolders(selectedFolder, rpcs3BinaryPath);
+
+        string selectedFolder2= rpcs3BinaryPath.Replace("rpcs3.exe", "dev_hdd0\\game");
+
+        CreateBatchFilesForFolders2(selectedFolder, selectedFolder2, rpcs3BinaryPath);
+
+    }
 
     private static string? SelectFolder()
     {
@@ -59,7 +53,6 @@ partial class Program
 
         return null;
     }
-
 
     private static string? SelectFile()
     {
@@ -129,6 +122,58 @@ partial class Program
         }
     }
 
+    private static void CreateBatchFilesForFolders2(string selectedFolder, string selectedFolder2, string rpcs3BinaryPath)
+    {
+        string[] subdirectoryEntries = Directory.GetDirectories(selectedFolder2);
+        int filesCreated = 0;
+
+        foreach (string subdirectory in subdirectoryEntries)
+        {
+            string ebootPath = Path.Combine(subdirectory, "USRDIR\\EBOOT.BIN");
+
+            if (File.Exists(ebootPath))
+            {
+                string title = GetTitle2(subdirectory);  // Get the title
+                string batchFileName;
+
+                // Use TITLE if available, otherwise use TITLE_ID, and if neither, use the folder name
+                if (!string.IsNullOrEmpty(title))
+                    batchFileName = title;
+                else
+                {
+                    string titleId = GetId2(subdirectory); // Fallback to TITLE_ID if TITLE is not available
+                    batchFileName = !string.IsNullOrEmpty(titleId) ? titleId : Path.GetFileName(subdirectory);
+                }
+
+                // Sanitize the batch file name to ensure it's a valid file name
+                batchFileName = SanitizeFileName(batchFileName);
+                string batchFilePath = Path.Combine(selectedFolder, batchFileName + ".bat");
+
+                using (StreamWriter sw = new(batchFilePath))
+                {
+                    sw.WriteLine($"\"{rpcs3BinaryPath}\" --no-gui \"{ebootPath}\"");
+                    Console.WriteLine($"Batch file created: {batchFilePath}");
+                }
+                filesCreated++;
+            }
+            else
+            {
+                Console.WriteLine($"EBOOT.BIN not found in {subdirectory}, skipping batch file creation.");
+            }
+        }
+
+        if (filesCreated > 0)
+        {
+            Console.WriteLine("All necessary batch files have been successfully created.");
+            MessageBox.Show("All necessary batch files have been successfully created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        else
+        {
+            Console.WriteLine("No EBOOT.BIN files found in subdirectories. No batch files were created.");
+            MessageBox.Show("No EBOOT.BIN files found in subdirectories. No batch files were created.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private static string GetId(string folderPath)
     {
         string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
@@ -140,9 +185,31 @@ partial class Program
         return value.ToUpper();
     }
 
+    private static string GetId2(string folderPath)
+    {
+        string sfoFilePath = Path.Combine(folderPath, "PARAM.SFO");
+
+        var sfoData = ReadSFO(sfoFilePath);
+        if (sfoData == null || !sfoData.TryGetValue("TITLE_ID", out string? value))
+            return "";
+
+        return value.ToUpper();
+    }
+
     private static string GetTitle(string folderPath)
     {
         string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
+
+        var sfoData = ReadSFO(sfoFilePath);
+        if (sfoData == null || !sfoData.TryGetValue("TITLE", out string? value))
+            return "";
+
+        return value;
+    }
+
+    private static string GetTitle2(string folderPath)
+    {
+        string sfoFilePath = Path.Combine(folderPath, "PARAM.SFO");
 
         var sfoData = ReadSFO(sfoFilePath);
         if (sfoData == null || !sfoData.TryGetValue("TITLE", out string? value))
