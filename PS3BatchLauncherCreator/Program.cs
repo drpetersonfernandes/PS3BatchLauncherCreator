@@ -1,6 +1,9 @@
-﻿using System.Globalization;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 partial class Program
@@ -8,28 +11,39 @@ partial class Program
     [STAThread]
     static void Main()
     {
-        Console.WriteLine("Select a folder to scan:");
-        string? selectedFolder = SelectFolder();
+        bool continueScanning = true;
 
-        if (string.IsNullOrEmpty(selectedFolder))
+        while (continueScanning)
         {
-            Console.WriteLine("No folder selected. Exiting application.");
-            MessageBox.Show("No folder selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            Console.WriteLine("Select a folder to scan:");
+            string? selectedFolder = SelectFolder();
+
+            if (string.IsNullOrEmpty(selectedFolder))
+            {
+                Console.WriteLine("No folder selected. Exiting application.");
+                MessageBox.Show("No folder selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            Console.WriteLine("Select the RPCS3 binary:");
+            string? rpcs3BinaryPath = SelectFile();
+
+            if (string.IsNullOrEmpty(rpcs3BinaryPath))
+            {
+                Console.WriteLine("No file selected. Exiting application.");
+                MessageBox.Show("No file selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            CreateBatchFilesForFolders(selectedFolder, rpcs3BinaryPath);
+
+            // Ask user if they want to scan another folder
+            Console.WriteLine("Do you want to scan another folder? (Y/N)");
+            var response = Console.ReadLine();
+            continueScanning = response != null && response.Trim().Equals("Y", StringComparison.OrdinalIgnoreCase);
         }
-
-        Console.WriteLine("Select the RPCS3 binary:");
-        string? rpcs3BinaryPath = SelectFile();
-
-        if (string.IsNullOrEmpty(rpcs3BinaryPath))
-        {
-            Console.WriteLine("No file selected. Exiting application.");
-            MessageBox.Show("No file selected. Exiting application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-
-        CreateBatchFilesForFolders(selectedFolder, rpcs3BinaryPath);
     }
+
 
     private static string? SelectFolder()
     {
@@ -114,7 +128,6 @@ partial class Program
             MessageBox.Show("No EBOOT.BIN files found in subdirectories. No batch files were created.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
-
 
     private static string GetId(string folderPath)
     {
