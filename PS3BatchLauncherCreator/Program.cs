@@ -1,8 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Windows.Forms;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 
-class Program
+partial class Program
 {
     [STAThread]
     static void Main()
@@ -73,11 +74,26 @@ class Program
 
             if (File.Exists(ebootPath))
             {
-                string batchFileName = Path.Combine(selectedFolder, Path.GetFileName(subdirectory) + ".bat");
-                using (StreamWriter sw = new(batchFileName))
+                string title = GetTitle(subdirectory);  // Get the title
+                string batchFileName;
+
+                // Use TITLE if available, otherwise use TITLE_ID, and if neither, use the folder name
+                if (!string.IsNullOrEmpty(title))
+                    batchFileName = title;
+                else
+                {
+                    string titleId = GetId(subdirectory); // Fallback to TITLE_ID if TITLE is not available
+                    batchFileName = !string.IsNullOrEmpty(titleId) ? titleId : Path.GetFileName(subdirectory);
+                }
+
+                // Sanitize the batch file name to ensure it's a valid file name
+                batchFileName = SanitizeFileName(batchFileName);
+                string batchFilePath = Path.Combine(selectedFolder, batchFileName + ".bat");
+
+                using (StreamWriter sw = new(batchFilePath))
                 {
                     sw.WriteLine($"\"{rpcs3BinaryPath}\" --no-gui \"{ebootPath}\"");
-                    Console.WriteLine($"Batch file created: {batchFileName}");
+                    Console.WriteLine($"Batch file created: {batchFilePath}");
                 }
                 filesCreated++;
             }
@@ -100,4 +116,180 @@ class Program
     }
 
 
+    private static string GetId(string folderPath)
+    {
+        string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
+
+        var sfoData = ReadSFO(sfoFilePath);
+        if (sfoData == null || !sfoData.TryGetValue("TITLE_ID", out string? value))
+            return "";
+
+        return value.ToUpper();
+    }
+
+    private static string GetTitle(string folderPath)
+    {
+        string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
+
+        var sfoData = ReadSFO(sfoFilePath);
+        if (sfoData == null || !sfoData.TryGetValue("TITLE", out string? value))
+            return "";
+
+        return value;
+    }
+
+    internal static readonly char[] separator = [' ', '.', '-', '_'];
+
+    private static string SanitizeFileName(string filename)
+    {
+        // Replace specific characters with words
+        filename = filename.Replace("Σ", "Sigma");
+
+        // Remove unwanted symbols
+        filename = filename.Replace("™", "").Replace("®", "");
+
+        // Add space between letters and numbers
+        filename = MyRegex().Replace(filename, "$1 $2");
+        filename = MyRegex1().Replace(filename, "$1 $2");
+
+        // Split the filename into words
+        var words = filename.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < words.Length; i++)
+        {
+            // Convert Roman numerals to uppercase
+            if (IsRomanNumeral(words[i]))
+            {
+                words[i] = words[i].ToUpper();
+            }
+            else
+            {
+                words[i] = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words[i].ToLower());
+            }
+        }
+
+        // Reassemble the filename
+        filename = String.Join(" ", words);
+
+        // Remove any invalid characters
+        var invalidChars = Path.GetInvalidFileNameChars();
+        foreach (var c in invalidChars)
+        {
+            filename = filename.Replace(c.ToString(), "");
+        }
+
+        return filename;
+    }
+
+    private static bool IsRomanNumeral(string word)
+    {
+        return MyRegex2().IsMatch(word);
+    }
+
+    private static Dictionary<string, string>? ReadSFO(string sfoFilePath)
+    {
+        if (!File.Exists(sfoFilePath))
+            return null;
+
+        var result = new Dictionary<string, string>();
+        var headerSize = Marshal.SizeOf(typeof(SfoHeader));
+        var indexSize = Marshal.SizeOf(typeof(SfoTableEntry));
+
+        var sfo = File.ReadAllBytes(sfoFilePath);
+        SfoHeader sfoHeader;
+        SfoTableEntry sfoTableEntry;
+
+        try
+        {
+            GCHandle handle = GCHandle.Alloc(sfo, GCHandleType.Pinned);
+#pragma warning disable CS8605 // Unboxing a possibly null value.
+            sfoHeader = (SfoHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(SfoHeader));
+#pragma warning restore CS8605 // Unboxing a possibly null value.
+            handle.Free();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error reading SFO file: " + ex.Message);
+            return null;
+        }
+
+        var indexOffset = headerSize;
+        var keyOffset = sfoHeader.key_table_start;
+        var valueOffset = sfoHeader.data_table_start;
+        for (var i = 0; i < sfoHeader.tables_entries; i++)
+        {
+            var sfoEntry = new byte[indexSize];
+            Array.Copy(sfo, indexOffset + i * indexSize, sfoEntry, 0, indexSize);
+
+            try
+            {
+                GCHandle handle = GCHandle.Alloc(sfoEntry, GCHandleType.Pinned);
+#pragma warning disable CS8605 // Unboxing a possibly null value.
+                sfoTableEntry = (SfoTableEntry)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(SfoTableEntry));
+#pragma warning restore CS8605 // Unboxing a possibly null value.
+                handle.Free();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading SFO file: " + ex.Message);
+                return null;
+            }
+
+            var entryValueOffset = valueOffset + sfoTableEntry.data_offset;
+            var entryKeyOffset = keyOffset + sfoTableEntry.key_offset;
+            var val = "";
+            var keyBytes = Encoding.UTF8.GetString(sfo.Skip((int)entryKeyOffset).TakeWhile(b => !b.Equals(0)).ToArray());
+            switch (sfoTableEntry.data_fmt)
+            {
+                case 0x0004: //non-null string
+                case 0x0204: //null string
+                    var strBytes = new byte[sfoTableEntry.data_len];
+                    Array.Copy(sfo, entryValueOffset, strBytes, 0, sfoTableEntry.data_len);
+                    val = Encoding.UTF8.GetString(strBytes).TrimEnd('\0');
+                    break;
+                case 0x0404: //uint32
+                    val = BitConverter.ToUInt32(sfo, (int)entryValueOffset).ToString();
+                    break;
+            }
+            result.TryAdd(keyBytes, val);
+        }
+
+        return result;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct SfoHeader
+    {
+        [FieldOffset(0)]
+        public uint magic;
+        [FieldOffset(4)]
+        public uint version;
+        [FieldOffset(8)]
+        public uint key_table_start;
+        [FieldOffset(12)]
+        public uint data_table_start;
+        [FieldOffset(16)]
+        public uint tables_entries;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct SfoTableEntry
+    {
+        [FieldOffset(0)]
+        public ushort key_offset;
+        [FieldOffset(2)]
+        public ushort data_fmt; // 0x0004 utf8-S (non-null string), 0x0204 utf8 (null string), 0x0404 uint32
+        [FieldOffset(4)]
+        public uint data_len;
+        [FieldOffset(8)]
+        public uint data_max_len;
+        [FieldOffset(12)]
+        public uint data_offset;
+    }
+
+    [GeneratedRegex("(\\p{L})(\\p{N})")]
+    private static partial Regex MyRegex();
+    [GeneratedRegex("(\\p{N})(\\p{L})")]
+    private static partial Regex MyRegex1();
+    [GeneratedRegex(@"^M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$", RegexOptions.IgnoreCase, "pt-BR")]
+    private static partial Regex MyRegex2();
 }
