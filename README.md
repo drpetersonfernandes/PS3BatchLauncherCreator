@@ -8,11 +8,11 @@ This utility creates batch files for PS3 games to easily launch them on the RPCS
 
 The utility asks the user for the folder where you store all your PS3 game folders, then it asks for the location of the RPCS3 emulator.
 
-It will also create batch files for every game folder inside the specified folder. It will create batch files for the game folders inside the RPCS3 emulator folder (RPCS3\dev_hdd0\game) as well.
+It will create batch files for every [game folder] inside the specified folder. It will also create batch files for the [game folders] inside the RPCS3 emulator folder [RPCS3\dev_hdd0\game].
 
-The batch files will be saved inside the originally specified folder.
+The batch files will be saved inside the user specified folder.
 
-The application will automatically read the PARAM.SFO to extract the game TITLE. This TITLE will be used to name the created batch file.
+The application will automatically read the PARAM.SFO inside every [game folder] to extract the game TITLE. This TITLE will be used to name the created batch file.
 
 To launch a game, you just need to double-click on the batch file.
 
