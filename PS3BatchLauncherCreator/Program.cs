@@ -1,8 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Forms;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -81,7 +78,7 @@ partial class Program
 
             if (File.Exists(ebootPath))
             {
-                string title = GetTitle(subdirectory);  // Get the title
+                string title = GetTitle(subdirectory);
                 string batchFileName;
 
                 // Use TITLE if available, otherwise use TITLE_ID, and if neither, use the folder name
@@ -93,7 +90,7 @@ partial class Program
                     batchFileName = !string.IsNullOrEmpty(titleId) ? titleId : Path.GetFileName(subdirectory);
                 }
 
-                // Sanitize the batch file name to ensure it's a valid file name
+                // Sanitize the batch file name
                 batchFileName = SanitizeFileName(batchFileName);
                 string batchFilePath = Path.Combine(selectedFolder, batchFileName + ".bat");
 
@@ -133,7 +130,7 @@ partial class Program
 
             if (File.Exists(ebootPath))
             {
-                string title = GetTitle2(subdirectory);  // Get the title
+                string title = GetTitle2(subdirectory);
                 string batchFileName;
 
                 // Use TITLE if available, otherwise use TITLE_ID, and if neither, use the folder name
@@ -145,7 +142,7 @@ partial class Program
                     batchFileName = !string.IsNullOrEmpty(titleId) ? titleId : Path.GetFileName(subdirectory);
                 }
 
-                // Sanitize the batch file name to ensure it's a valid file name
+                // Sanitize the batch file name
                 batchFileName = SanitizeFileName(batchFileName);
                 string batchFilePath = Path.Combine(selectedFolder, batchFileName + ".bat");
 

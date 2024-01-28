@@ -11,6 +11,9 @@
     <PackageIcon>icon2.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <UseWindowsForms>True</UseWindowsForms>
+    <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
