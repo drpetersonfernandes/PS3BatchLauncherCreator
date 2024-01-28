@@ -8,7 +8,7 @@ This utility creates batch files for PS3 games to easily launch them on the RPCS
 
 The utility asks the user for the folder where you store all your PS3 game folders, then it asks for the location of the RPCS3 emulator.
 
-It will create batch files for every [game folder] inside the specified folder. It will also create batch files for the [game folders] inside the RPCS3 emulator folder [RPCS3\dev_hdd0\game].
+It will create batch files for every [game folder] inside the specified folder. It will also create batch files for the [game folders] inside the RPCS3 emulator folder [RPCS3\dev_hdd0\game\\].
 
 The batch files will be saved inside the user specified folder.
 
