@@ -8,6 +8,8 @@ partial class Program
     [STAThread]
     static void Main()
     {
+        MessageBox.Show("This program create batch files to launch your PS3 games.\n\nPlease follow the instruction.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        
         Console.WriteLine("Select a folder to scan:");
         string? selectedFolder = SelectFolder();
 
@@ -18,7 +20,7 @@ partial class Program
             return;
         }
 
-        Console.WriteLine("Select the RPCS3 binary:");
+        Console.WriteLine("Select the RPCS3 emulator binary:");
         string? rpcs3BinaryPath = SelectFile();
 
         if (string.IsNullOrEmpty(rpcs3BinaryPath))
@@ -39,7 +41,7 @@ partial class Program
     private static string? SelectFolder()
     {
         using var fbd = new FolderBrowserDialog();
-        fbd.Description = "Please select the root folder where your game folders are located.";
+        fbd.Description = "Please select the root folder where your Game folders are located.";
 
         DialogResult result = fbd.ShowDialog();
 
@@ -47,14 +49,13 @@ partial class Program
         {
             return fbd.SelectedPath;
         }
-
         return null;
     }
 
     private static string? SelectFile()
     {
         using var ofd = new OpenFileDialog();
-        ofd.Title = "Please select the RPCS3 binary file (rpcs3.exe)";
+        ofd.Title = "Please select the RPCS3 emulator binary file (rpcs3.exe)";
         ofd.Filter = "exe files (*.exe)|*.exe|All files (*.*)|*.*";
         ofd.FilterIndex = 1;
         ofd.RestoreDirectory = true;
@@ -63,7 +64,6 @@ partial class Program
         {
             return ofd.FileName;
         }
-
         return null;
     }
 
@@ -109,8 +109,8 @@ partial class Program
 
         if (filesCreated > 0)
         {
-            Console.WriteLine("All necessary batch files have been successfully created.");
-            MessageBox.Show("All necessary batch files have been successfully created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Console.WriteLine("All batch files have been successfully created.");
+            MessageBox.Show("All batch files have been successfully created.\n\nThey are located at the root folder of your PS3 games.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         else
         {
@@ -161,8 +161,8 @@ partial class Program
 
         if (filesCreated > 0)
         {
-            Console.WriteLine("All necessary batch files have been successfully created.");
-            MessageBox.Show("All necessary batch files have been successfully created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Console.WriteLine("All batch files have been successfully created.");
+            MessageBox.Show("All batch files have been successfully created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         else
         {
