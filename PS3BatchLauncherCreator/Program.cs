@@ -8,7 +8,7 @@ partial class Program
     [STAThread]
     static void Main()
     {
-        MessageBox.Show("This program create batch files to launch your PS3 games.\n\nPlease follow the instruction.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show("This program create batch files to launch your PS3 games.\n\nPlease follow the instructions.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
         
         Console.WriteLine("Select a folder to scan:");
         string? selectedFolder = SelectFolder();
