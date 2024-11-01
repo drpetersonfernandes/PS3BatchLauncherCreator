@@ -175,7 +175,7 @@ partial class Program
     {
         string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
 
-        var sfoData = ReadSFO(sfoFilePath);
+        var sfoData = ReadSfo(sfoFilePath);
         if (sfoData == null || !sfoData.TryGetValue("TITLE_ID", out string? value))
             return "";
 
@@ -186,7 +186,7 @@ partial class Program
     {
         string sfoFilePath = Path.Combine(folderPath, "PARAM.SFO");
 
-        var sfoData = ReadSFO(sfoFilePath);
+        var sfoData = ReadSfo(sfoFilePath);
         if (sfoData == null || !sfoData.TryGetValue("TITLE_ID", out string? value))
             return "";
 
@@ -197,7 +197,7 @@ partial class Program
     {
         string sfoFilePath = Path.Combine(folderPath, "PS3_GAME\\PARAM.SFO");
 
-        var sfoData = ReadSFO(sfoFilePath);
+        var sfoData = ReadSfo(sfoFilePath);
         if (sfoData == null || !sfoData.TryGetValue("TITLE", out string? value))
             return "";
 
@@ -208,14 +208,14 @@ partial class Program
     {
         string sfoFilePath = Path.Combine(folderPath, "PARAM.SFO");
 
-        var sfoData = ReadSFO(sfoFilePath);
+        var sfoData = ReadSfo(sfoFilePath);
         if (sfoData == null || !sfoData.TryGetValue("TITLE", out string? value))
             return "";
 
         return value;
     }
 
-    internal static readonly char[] separator = [' ', '.', '-', '_'];
+    private static readonly char[] Separator = [' ', '.', '-', '_'];
 
     private static string SanitizeFileName(string filename)
     {
@@ -230,7 +230,7 @@ partial class Program
         filename = MyRegex1().Replace(filename, "$1 $2");
 
         // Split the filename into words
-        var words = filename.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+        var words = filename.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
         for (int i = 0; i < words.Length; i++)
         {
             // Convert Roman numerals to uppercase
@@ -262,7 +262,7 @@ partial class Program
         return MyRegex2().IsMatch(word);
     }
 
-    private static Dictionary<string, string>? ReadSFO(string sfoFilePath)
+    private static Dictionary<string, string>? ReadSfo(string sfoFilePath)
     {
         if (!File.Exists(sfoFilePath))
             return null;
@@ -273,7 +273,6 @@ partial class Program
 
         var sfo = File.ReadAllBytes(sfoFilePath);
         SfoHeader sfoHeader;
-        SfoTableEntry sfoTableEntry;
 
         try
         {
@@ -297,6 +296,7 @@ partial class Program
             var sfoEntry = new byte[indexSize];
             Array.Copy(sfo, indexOffset + i * indexSize, sfoEntry, 0, indexSize);
 
+            SfoTableEntry sfoTableEntry;
             try
             {
                 GCHandle handle = GCHandle.Alloc(sfoEntry, GCHandleType.Pinned);
