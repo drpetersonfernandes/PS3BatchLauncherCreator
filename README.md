@@ -1,26 +1,37 @@
-# PS3BatchLauncherCreator
+# CreateBatchFilesForPS3Games
 
-A batch file creator for RPCS3 emulator.
+CreateBatchFilesForPS3Games is a utility that creates batch files for launching PS3 games using the RPCS3 emulator.
+With a simple, guided interface, users can quickly generate launcher files for all games in a specified directory.
 
-## How it works
+## How It Works
 
-This utility creates batch files for PS3 games to easily launch them on the RPCS3 emulator.
+The application walks you through the following steps:
 
-The utility asks the user for the folder where you store all your PS3 game folders, then it asks for the location of the RPCS3 emulator.
+1. **Select RPCS3 Executable:** Choose the location of the RPCS3 emulator executable (`rpcs3.exe`).
+2. **Select Games Folder:** Choose the root folder that contains your PS3 game folders.
+3. **Create Batch Files:** Click the "Create Batch Files" button to generate a launcher for each game.
 
-It will create batch files for every [game folder] inside the specified folder. It will also create batch files for the [game folders] inside the RPCS3 emulator folder [RPCS3\dev_hdd0\game\\].
+The program generates two sets of batch files:
+- One for each game folder found within the selected directory.
+- One for game folders located inside the RPCS3 directory (`RPCS3\dev_hdd0\game\`).
 
-The batch files will be saved inside the user specified folder.
+The application automatically reads the `PARAM.SFO` file in each game folder to extract the official game title,
+which is then used to name the batch file.
 
-The application will automatically read the PARAM.SFO inside every [game folder] to extract the game TITLE. This TITLE will be used to name the created batch file.
+## Features
 
-To launch a game, you just need to double-click on the batch file.
+- **User-Friendly Interface:** Clear guidance through each step of the process.
+- **Automatic Game Detection:** Identifies game folders within the specified directories.
+- **Accurate Batch File Naming:** Extracts game titles from `PARAM.SFO` to name batch files appropriately.
+- **Seamless Game Launching:** Batch files can be used to launch games directly, integrated into any emulator frontend, or added to Steam.
+- **Detailed Logging:** Real-time logs inform you of the progress and any errors during the batch file creation process.
 
-This batch file can be called directly from any Emulator Launcher or Emulator Frontend, or even from Steam.
+## Usage Examples
 
-It was originally designed by the creator of the [Simple Launcher](https://github.com/drpetersonfernandes/SimpleLauncher) emulator frontend, but it can be used with any frontend or even without one.
+After generating the batch files, you can launch your games by simply double-clicking the corresponding file.
+These scripts are also compatible with any emulator launcher or frontend.
 
-## Bat File Examples
+### Example Batch File Command
 
 ```bat
 "G:\Emulators\RPCS3\rpcs3.exe" --no-gui "G:\Emulators\RPCS3\dev_hdd0\game\NPUB30024\USRDIR\EBOOT.BIN"
@@ -32,18 +43,26 @@ It was originally designed by the creator of the [Simple Launcher](https://githu
 
 ## Screenshots
 
-![Screenshot](screenshot1.png)
+![Application Interface](screenshot1.png)  
+*The main interface of PS3BatchLauncherCreator.*
 
-![Screenshot](screenshot2.png)
+![Batch File Creation Process](screenshot2.png)  
+*Log messages during the batch file creation process.*
 
-![Screenshot](screenshot3.png)
+![Successful Batch File Creation](screenshot3.png)  
+*Confirmation that all batch files have been successfully created.*
 
 ## Technical Details
 
-It was written in C# using Microsoft Visual Studio Community 2022 (64-bit) with Microsoft .NET 8.0.
+- **Language & Framework:** Developed in C# using WPF.
+- **Target Framework:** .NET 9.0 for Windows.
+- **Compatibility:** Designed for Windows and tested on Windows 11 (expected to work with Windows 7 and later).
 
-This program is Windows-only. Compatibility with Windows 7 and later versions is expected. It has been tested on Windows 11.
+## Support
+
+If you like the software, please give us a star.<br>
+Consider [donating](https://www.purelogiccode.com/donate) to support the project or simply to express your gratitude!
 
 ## Contributors
 
-- **Peterson Fernandes** - [Github Profile](https://github.com/drpetersonfernandes)
+- **Peterson Fernandes** - [GitHub Profile](https://github.com/drpetersonfernandes)
